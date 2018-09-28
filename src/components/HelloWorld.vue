@@ -11,15 +11,18 @@
             <Input v-model="formItem.data" placeholder="请输入数据" clearable></Input>
           </FormItem>
           <FormItem label="参数模型">
-            <Select>
-              <Option v-for="item in formItem.gxStr" :value="item.value" :key="item.value">{{item.label}}</Option>
+            <Select @on-change="onChange">
+              <Option v-for="item in formItem.gxStr"  :value="item.value" :key="item.value">{{item.label}}</Option>
             </Select>
+          </FormItem>
+          <FormItem label="二进制码">
+            <Input v-model="formItem.byte"></Input>
           </FormItem>
           <FormItem label="冗余码">
             <Input v-model="formItem.crc"></Input>
           </FormItem>
           <FormItem>
-            <Button type="primary" @click="crcCode">生成冗余码</Button>
+            <Button type="primary" @click="crcCode()">生成冗余码</Button>
           </FormItem>
           <FormItem label="新的源数据">
             <Input v-model="formItem.dataStr" placeholder="请输入数据" clearable></Input>
@@ -36,6 +39,9 @@
         <Form :model="formItem" :label-width="80">
           <FormItem label="源数据">
             <Input v-model="formItem.data" placeholder="请输入数据"></Input>
+          </FormItem>
+          <FormItem label="二进制码">
+            <Input v-model="formItem.byte"></Input>
           </FormItem>
           <FormItem label="海明码">
             <Input v-model="formItem.crc"></Input>
@@ -68,6 +74,7 @@
       return {
         formItem: {
           data: '',
+          byte:'',
           crc: '',
           gxStr: [
             {
@@ -93,14 +100,18 @@
       }
     },
     methods: {
-      crcCode() {
+      onChange(event){
+        console.log(event);
+      },
+      crcCode(value) {
         console.log("!!!")
+        // console.log(value)
         axios({
-          url: 'http://192.168.50.223:8080/CRC/getCRC',
+          url: 'http://0.0.0.0:8081/CRC/getCRC',
           method: 'post',
           params: {
             data: this.formItem.data,
-            gxStr: this.formItem.gxStr.value
+            gxStr: this.formItem.gxStr
           }
         }).then((res) => {
           if (res.data.code === "SUCCESS" && res.data.data.length) {
