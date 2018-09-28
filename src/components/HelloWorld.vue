@@ -12,7 +12,7 @@
           </FormItem>
           <FormItem label="参数模型">
             <Select @on-change="onChange">
-              <Option v-for="item in formItem.gxStr"  :value="item.value" :key="item.value">{{item.label}}</Option>
+              <Option v-for="item in formItem.gx" :value="item.value" :key="item.value">{{item.label}}</Option>
             </Select>
           </FormItem>
           <FormItem label="二进制码">
@@ -22,7 +22,7 @@
             <Input v-model="formItem.crc"></Input>
           </FormItem>
           <FormItem>
-            <Button type="primary" @click="crcCode()">生成冗余码</Button>
+            <Button type="primary" @click="crcCode">生成冗余码</Button>
           </FormItem>
           <FormItem label="新的源数据">
             <Input v-model="formItem.dataStr" placeholder="请输入数据" clearable></Input>
@@ -74,9 +74,9 @@
       return {
         formItem: {
           data: '',
-          byte:'',
+          byte: '',
           crc: '',
-          gxStr: [
+          gx: [
             {
               value: '1100000001111',
               label: 'CRC-12'
@@ -94,53 +94,64 @@
               label: 'CRC-32'
             }
           ],
+          gxStr: '',
           dataStr: '',
         },
         result: ''
       }
     },
     methods: {
-      onChange(event){
-        console.log(event);
+      onChange(e) {
+        console.log(e)
+        this.gxStr = e
       },
-      crcCode(value) {
+      crcCode() {
         console.log("!!!")
-        // console.log(value)
+        console.log(typeof this.gxStr, this.gxStr)
+        console.log(typeof this.formItem.data, this.formItem.data)
         axios({
           url: 'http://0.0.0.0:8081/CRC/getCRC',
           method: 'post',
           params: {
             data: this.formItem.data,
-            gxStr: this.formItem.gxStr
+            gxStr: this.gxStr
           }
         }).then((res) => {
-          if (res.data.code === "SUCCESS" && res.data.data.length) {
+          if (res.data.code === "SUCCESS") {
             console.log('成功!')
             this.$Message.success("生成CRC码成功!")
-            this.formItem.crc = res.data.data
+            this.formItem.crc = res.data.data.crc
+            this.formItem.byte = res.data.data.byte
           } else {
             this.$Message.error(res.data.message)
             console.log(res.data.message)
           }
-        }).catch((e) => {
-          console.log(e)
+        }).catch((error) => {
+          console.log(error)
         });
       },
       checkCrc() {
         axios({
-          url: 'http://192.168.50.223:8080/CRC/checkCRC',
+          url: 'http://0.0.0.0:8081/CRC/checkCRC',
           method: 'post',
           params: {
-            crc: this.crc,
+            crc: this.formItem.crc,
             dataStr: this.formItem.dataStr,
-            gxStr: this.formItem.gxStr.value
+            gxStr: this.gxStr
           }
         }).then((res) => {
-          if (res.data.code === "SUCCESS" && res.data.data.length) {
-            this.result = res.data.data
-          }else {
+          if (res.data.code === "SUCCESS") {
+            console.log(res.data.data)
+            this.$Message.success('检验成功!')
+            if (res.data.data === true)
+              this.result = "没有出现错误"
+            else if (res.data.data === false)
+              this.result = "出现错误"
+          } else {
             this.$Message.error(res.data.message)
           }
+        }).catch((e) => {
+
         });
       }
     }
@@ -164,11 +175,13 @@
   .hamming {
     margin-left: 50px;
   }
-  .title{
+
+  .title {
     text-align: center;
     font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;;
     font-size: 46px;
   }
+
   .subtitle {
     text-align: center;
     font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;;
